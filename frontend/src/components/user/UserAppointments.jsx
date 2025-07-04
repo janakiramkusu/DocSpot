@@ -11,7 +11,6 @@ const UserAppointments = () => {
   const [userAppointments, setUserAppointments] = useState([]);
   const [doctorAppointments, setDoctorAppointments] = useState([]);
 
-
   const getUser = () => {
     const user = JSON.parse(localStorage.getItem('userData'));
     if (user) {
@@ -24,7 +23,6 @@ const UserAppointments = () => {
   };
 
   const getUserAppointment = async () => {
-    console.log(userid)
     try {
       const res = await axios.get('http://localhost:8001/api/user/getuserappointments', {
         headers: {
@@ -35,7 +33,6 @@ const UserAppointments = () => {
         },
       });
       if (res.data.success) {
-
         message.success(res.data.message);
         setUserAppointments(res.data.data);
       }
@@ -46,7 +43,6 @@ const UserAppointments = () => {
   };
 
   const getDoctorAppointment = async () => {
-    console.log(userid)
     try {
       const res = await axios.get('http://localhost:8001/api/doctor/getdoctorappointments', {
         headers: {
@@ -77,9 +73,9 @@ const UserAppointments = () => {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
-        })
+        });
       if (res.data.success) {
-        message.success(res.data.message)
+        message.success(res.data.message);
         getDoctorAppointment();
         getUserAppointment();
       }
@@ -91,15 +87,17 @@ const UserAppointments = () => {
 
   useEffect(() => {
     getUser();
-  }, [userid]);
+  }, []);
 
   useEffect(() => {
-    if (type === true) {
-      getDoctorAppointment();
-    } else {
-      getUserAppointment();
+    if (userid) {
+      if (type === true) {
+        getDoctorAppointment();
+      } else {
+        getUserAppointment();
+      }
     }
-  }, [type])
+  }, [userid, type]);
 
   const handleDownload = async (url, appointId) => {
     try {
@@ -110,18 +108,14 @@ const UserAppointments = () => {
         params: { appointId },
         responseType: 'blob'
       });
-      console.log(res.data)
+
       if (res.data) {
-        const fileUrl = window.URL.createObjectURL(new Blob([res.data], { "type": "application/pdf" }));
+        const fileUrl = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
         const downloadLink = document.createElement("a");
         document.body.appendChild(downloadLink);
         downloadLink.setAttribute("href", fileUrl);
 
-        // Extract the file name from the url parameter
-        const fileName = url.split("/").pop(); // Assuming the URL is in the format "uploads/document.pdf"
-
-        console.log(fileUrl, downloadLink, fileName)
-        // Set the file name for the download
+        const fileName = url.split("/").pop();
         downloadLink.setAttribute("download", fileName);
         downloadLink.style.display = "none";
         downloadLink.click();
@@ -133,11 +127,11 @@ const UserAppointments = () => {
       message.error('Something went wrong');
     }
   };
+
   return (
     <div>
       <h2 className='p-3 text-center'>All Appointments</h2>
       <Container>
-
         {type === true ? (
           <Table striped bordered hover>
             <thead>
@@ -152,18 +146,30 @@ const UserAppointments = () => {
             </thead>
             <tbody>
               {doctorAppointments.length > 0 ? (
-                doctorAppointments.map((appointment) => {
-                  return (
-                    <tr key={appointment._id}>
-                      <td>{appointment.userInfo.fullName}</td>
-                      <td>{appointment.date}</td>
-                      <td>{appointment.userInfo.phone}</td>
-                      <td><Button variant='link' onClick={() => handleDownload(appointment.document.path, appointment._id)}>{appointment.document.filename}</Button></td>
-                      <td>{appointment.status}</td>
-                      <td>{appointment.status === 'approved' ? <></> : <Button onClick={() => handleStatus(appointment.userInfo._id, appointment._id, 'approved')}>Approve</Button>}</td>
-                    </tr>
-                  );
-                })
+                doctorAppointments.map((appointment) => (
+                  <tr key={appointment._id}>
+                    <td>{appointment.userInfo.fullName}</td>
+                    <td>{appointment.date}</td>
+                    <td>{appointment.userInfo.phone}</td>
+                    <td>
+                      {appointment.document ? (
+                        <Button variant='link' onClick={() => handleDownload(appointment.document.path, appointment._id)}>
+                          {appointment.document.filename}
+                        </Button>
+                      ) : (
+                        <span>No Document</span>
+                      )}
+                    </td>
+                    <td>{appointment.status}</td>
+                    <td>
+                      {appointment.status === 'approved' ? null : (
+                        <Button onClick={() => handleStatus(appointment.userInfo._id, appointment._id, 'approved')}>
+                          Approve
+                        </Button>
+                      )}
+                    </td>
+                  </tr>
+                ))
               ) : (
                 <tr>
                   <td colSpan={6}>
@@ -186,15 +192,13 @@ const UserAppointments = () => {
             </thead>
             <tbody>
               {userAppointments.length > 0 ? (
-                userAppointments.map((appointment) => {
-                  return (
-                    <tr key={appointment._id}>
-                      <td>{appointment.docName}</td>
-                      <td>{appointment.date}</td>
-                      <td>{appointment.status}</td>
-                    </tr>
-                  );
-                })
+                userAppointments.map((appointment) => (
+                  <tr key={appointment._id}>
+                    <td>{appointment.docName}</td>
+                    <td>{appointment.date}</td>
+                    <td>{appointment.status}</td>
+                  </tr>
+                ))
               ) : (
                 <tr>
                   <td colSpan={3}>
