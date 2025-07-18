@@ -23,7 +23,6 @@ A simple and efficient full-stack doctor appointment booking system that allows 
 - **Backend**: Node.js, Express.js  
 - **Database**: MongoDB (via MongoDB Atlas)  
 - **Authentication**: JWT (JSON Web Tokens)  
-- **Deployment**: *(Add Vercel / Render / Heroku if deployed)*
 
 ---
 
